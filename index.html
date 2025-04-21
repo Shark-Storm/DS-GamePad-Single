@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gamepad Controller</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #282c34;
+      color: white;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .gamepad {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      align-items: center;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .control-button {
+      background-color: #61dafb;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      padding: 15px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 80px;
+      height: 80px;
+      margin: 5px;
+    }
+
+    .control-button:active {
+      background-color: #21a1f1;
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-rows: repeat(3, 1fr);
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin: 10px;
+    }
+
+    .dpad-middle {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .joystick {
+      margin: 20px;
+      position: relative;
+      width: 150px;
+      height: 150px;
+      background: #444;
+      border-radius: 50%;
+    }
+
+    .joystick-pad {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background: #61dafb;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .xyab-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      gap: 10px;
+      margin: 10px;
+    }
+
+    .start-select {
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gamepad Controller</h1>
+    <div class="gamepad">
+      <!-- D-Pad -->
+      <div class="dpad">
+        <button class="control-button" data-action="up">↑</button>
+        <div class="dpad-middle">
+          <button class="control-button" data-action="left">←</button>
+          <button class="control-button" data-action="select">SELECT</button>
+          <button class="control-button" data-action="right">→</button>
+        </div>
+        <button class="control-button" data-action="down">↓</button>
+      </div>
+
+      <!-- Joystick -->
+      <div class="joystick">
+        <div class="joystick-pad" id="joystick-pad"></div>
+      </div>
+
+      <!-- XYAB Buttons -->
+      <div class="xyab-buttons">
+        <button class="control-button" data-action="x">X</button>
+        <button class="control-button" data-action="y">Y</button>
+        <button class="control-button" data-action="a">A</button>
+        <button class="control-button" data-action="b">B</button>
+      </div>
+
+      <!-- Start Button -->
+      <div class="start-select">
+        <button class="control-button" data-action="start">START</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const serverUrl = "wss://garnet-radial-boa.glitch.me"; // WebSocket server URL
+    const socket = new WebSocket(serverUrl);
+
+    // Handle button clicks
+    document.querySelectorAll(".control-button").forEach(button => {
+      button.addEventListener("click", (event) => {
+        const action = event.target.dataset.action;
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ action }));
+        } else {
+          console.error("WebSocket is not open.");
+        }
+      });
+    });
+
+    // Joystick functionality
+    const joystickPad = document.getElementById("joystick-pad");
+    const joystick = joystickPad.parentElement;
+    let joystickActive = false;
+    let touchId = null;
+
+    // Helper to get pointer position (supports both mouse and touch)
+    function getPointerPosition(event) {
+      if (event.touches) {
+        const touch = event.changedTouches[0];
+        return { x: touch.clientX, y: touch.clientY };
+      }
+      return { x: event.clientX, y: event.clientY };
+    }
+
+    // Dragging logic for joystick
+    function startDrag(event) {
+      joystickActive = true;
+
+      // For touch events, track the specific touch identifier
+      if (event.touches) {
+        touchId = event.changedTouches[0].identifier;
+      }
+    }
+
+    function moveDrag(event) {
+      if (!joystickActive) return;
+
+      let pointerPosition;
+
+      if (event.touches) {
+        // Only handle the movement for the original touch to avoid multi-touch issues
+        const touch = Array.from(event.touches).find(t => t.identifier === touchId);
+        if (!touch) return;
+        pointerPosition = { x: touch.clientX, y: touch.clientY };
+      } else {
+        pointerPosition = getPointerPosition(event);
+      }
+
+      const rect = joystick.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const dx = pointerPosition.x - centerX;
+      const dy = pointerPosition.y - centerY;
+      const radius = rect.width / 2;
+
+      const distance = Math.min(Math.sqrt(dx * dx + dy * dy), radius);
+      const angle = Math.atan2(dy, dx);
+
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
+
+      joystickPad.style.transform = `translate(${x}px, ${y}px)`;
+
+      // Send joystick position
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ joystick: { x: x / radius, y: y / radius } }));
+      }
+    }
+
+    function endDrag(event) {
+      // For touch, ensure the event corresponds to the original touch
+      if (event.touches && !Array.from(event.changedTouches).some(t => t.identifier === touchId)) {
+        return;
+      }
+
+      joystickActive = false;
+      touchId = null;
+
+      // Reset joystick position visually
+      joystickPad.style.transform = "translate(-50%, -50%)";
+
+      // Reset joystick position signal
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ joystick: { x: 0, y: 0 } }));
+      }
+    }
+
+    // Event listeners for mouse and touch
+    joystickPad.addEventListener("mousedown", startDrag);
+    joystickPad.addEventListener("touchstart", startDrag);
+
+    document.addEventListener("mousemove", moveDrag);
+    document.addEventListener("touchmove", moveDrag);
+
+    document.addEventListener("mouseup", endDrag);
+    document.addEventListener("touchend", endDrag);
+
+    socket.onopen = () => {
+      console.log("Connected to server");
+    };
+
+    socket.onclose = () => {
+      console.log("Disconnected from server");
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+  </script>
+</body>
+</html>
