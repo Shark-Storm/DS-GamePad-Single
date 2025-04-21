@@ -53,20 +53,55 @@
 
     .dpad {
       display: grid;
-      grid-template-rows: repeat(3, 1fr);
-      grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      margin: 10px;
-    }
-
-    .dpad-middle {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 60px 60px 60px;
+      grid-template-rows: 60px 60px 60px;
       gap: 5px;
       justify-content: center;
       align-items: center;
     }
-
+    
+    .dpad-btn {
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      background-color: #444;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+    
+    .dpad-btn:active {
+      background-color: #666;
+    }
+    
+    .dpad .up {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    
+    .dpad .left {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    
+    .dpad .center {
+      grid-column: 2;
+      grid-row: 2;
+      background-color: transparent;
+      border: none;
+      pointer-events: none;
+    }
+    
+    .dpad .right {
+      grid-column: 3;
+      grid-row: 2;
+    }
+    
+    .dpad .down {
+      grid-column: 2;
+      grid-row: 3;
+    }
+    
     .joystick {
     position: relative;
     width: 150px;
@@ -92,12 +127,49 @@
     }
 
     .xyab-buttons {
-      display: grid;
-      grid-template-columns: repeat(2, auto);
-      gap: 10px;
-      margin: 10px;
+      position: relative;
+      width: 180px;
+      height: 180px;
     }
-
+    
+    .xyab-btn {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      background-color: #444;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 60px;
+    }
+    
+    .xyab-btn:active {
+      background-color: #666;
+    }
+    
+    /* Position the buttons like a diamond (DS layout) */
+    .xyab-btn.x {
+      top: 0;
+      left: 60px;
+    }
+    
+    .xyab-btn.y {
+      top: 60px;
+      left: 0;
+    }
+    
+    .xyab-btn.a {
+      top: 60px;
+      left: 120px;
+    }
+    
+    .xyab-btn.b {
+      top: 120px;
+      left: 60px;
+    }
+    
     .start-select {
       margin: 10px;
     }
@@ -108,14 +180,14 @@
     <h1>Gamepad Controller</h1>
     <div class="gamepad">
       <!-- D-Pad -->
-      <div class="dpad">
-        <button class="control-button" data-action="up">↑</button>
-        <div class="dpad-middle">
-          <button class="control-button" data-action="left">←</button>
-          <button class="control-button" data-action="select">SELECT</button>
-          <button class="control-button" data-action="right">→</button>
+      <div class="dpad-wrapper">
+        <div class="dpad">
+          <button class="dpad-btn up" data-button="up">▲</button>
+          <button class="dpad-btn left" data-button="left">◀</button>
+          <button class="dpad-btn center" disabled></button>
+          <button class="dpad-btn right" data-button="right">▶</button>
+          <button class="dpad-btn down" data-button="down">▼</button>
         </div>
-        <button class="control-button" data-action="down">↓</button>
       </div>
 
       <!-- Joystick -->
@@ -124,12 +196,15 @@
       </div>
 
       <!-- XYAB Buttons -->
-      <div class="xyab-buttons">
-        <button class="control-button" data-action="x">X</button>
-        <button class="control-button" data-action="y">Y</button>
-        <button class="control-button" data-action="a">A</button>
-        <button class="control-button" data-action="b">B</button>
+      <div class="xyab-wrapper">
+        <div class="xyab-buttons">
+          <button class="xyab-btn x" data-button="x">X</button>
+          <button class="xyab-btn y" data-button="y">Y</button>
+          <button class="xyab-btn a" data-button="a">A</button>
+          <button class="xyab-btn b" data-button="b">B</button>
+        </div>
       </div>
+
 
       <!-- Start Button -->
       <div class="start-select">
