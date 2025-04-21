@@ -1,0 +1,21 @@
+{
+  "name": "Gamepad Controller",
+  "short_name": "Gamepad",
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#282c34",
+  "theme_color": "#61dafb",
+  "description": "A web-based gamepad controller with joystick support."
+}
