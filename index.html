@@ -6,6 +6,16 @@
   <link rel="manifest" href="manifest.json">
   <title>Gamepad Controller</title>
   <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;         /* Prevents scrollbars from appearing */
+      height: 100%;
+      width: 100%;
+      touch-action: none;       /* Prevents default scroll & zoom gestures */
+      overscroll-behavior: none; /* Prevents "bounce" scroll on mobile */
+    }
+    
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -171,7 +181,38 @@
     }
     
     .start-select {
-      margin: 10px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .start-wrapper,
+    .select-wrapper {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .control-button.start-btn,
+    .control-button.select-btn {
+      width: 40px;
+      height: 20px;
+      background-color: #444;
+      border: none;
+      border-radius: 10px;
+      padding: 0;
+    }
+    
+    .control-button:active {
+      background-color: #666;
+    }
+    
+    .button-label {
+      font-size: 14px;
+      color: #fff;
+      font-family: sans-serif;
     }
   </style>
 </head>
@@ -208,8 +249,14 @@
 
       <!-- Start Button -->
       <div class="start-select">
-        <button class="control-button" data-action="start">START</button>
-        <button class="control-button" data-action="select">SELECT</button>
+        <div class="start-wrapper">
+          <button class="control-button start-btn" data-action="start"></button>
+          <span class="button-label">START</span>
+        </div>
+        <div class="select-wrapper">
+          <button class="control-button select-btn" data-action="select"></button>
+          <span class="button-label">SELECT</span>
+        </div>
       </div>
     </div>
   </div>
