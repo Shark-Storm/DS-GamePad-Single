@@ -220,11 +220,64 @@
       color: #fff;
       font-family: sans-serif;
     }
+
+    .shoulder-buttons {
+      position: fixed;
+      top: 10px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+      pointer-events: none; /* prevents container from blocking touches */
+      z-index: 1000;
+    }
+    
+    .shoulder-button {
+      width: 60px;
+      height: 30px;
+      background: #555;
+      border-radius: 8px;
+      border: 2px solid #333;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      pointer-events: auto; /* allows the buttons themselves to be clickable */
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    
+    /* Change background on press */
+    .shoulder-button:active {
+      background-color: #333;
+      transform: translateY(4px);
+    }
+    
+    /* Optional: Change color on hover */
+    .shoulder-button:hover {
+      background-color: #777;
+    }
+    
+    /* Optional: Highlight text on active/press */
+    .shoulder-button:active {
+      font-weight: bold;
+      color: #21a1f1;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="gamepad">
+      <!--L/R Buttons-->
+      <div class="shoulder-buttons">
+        <button class="shoulder-button left" data-action="L">L</button>
+        <button class="shoulder-button right" data-action="R">R</button>
+      </div>
+
       <!-- D-Pad -->
       <div class="dpad-wrapper">
         <div class="dpad">
