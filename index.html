@@ -68,24 +68,27 @@
     }
 
     .joystick {
-      margin: 20px;
-      position: relative;
-      width: 150px;
-      height: 150px;
-      background: #444;
-      border-radius: 50%;
-    }
+    position: relative;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, #666 0%, #333 100%);
+    border: 3px solid #888;
+    border-radius: 50%;
+    margin: 20px;
+    touch-action: none;
+  }
 
     .joystick-pad {
       position: absolute;
-      width: 50px;
-      height: 50px;
-      background: #61dafb;
+      width: 60px;
+      height: 60px;
+      background: rgba(97, 218, 251, 0.8);
+      border: 2px solid #21a1f1;
       border-radius: 50%;
-      top: 50%;
-      left: 50%;
       transform: translate(-50%, -50%);
       pointer-events: none;
+      top: 50%;
+      left: 50%;
     }
 
     .xyab-buttons {
@@ -153,10 +156,11 @@
     // Joystick functionality
     const joystickPad = document.getElementById("joystick-pad");
     const joystick = joystickPad.parentElement;
+    
     let joystickActive = false;
+    let origin = { x: 0, y: 0 };
     let touchId = null;
-
-    // Helper to get pointer position (supports both mouse and touch)
+    
     function getPointerPosition(event) {
       if (event.touches) {
         const touch = event.changedTouches[0];
@@ -164,80 +168,86 @@
       }
       return { x: event.clientX, y: event.clientY };
     }
-
-    // Dragging logic for joystick
+    
     function startDrag(event) {
+      event.preventDefault();
       joystickActive = true;
-
-      // For touch events, track the specific touch identifier
+      const pointer = getPointerPosition(event);
+      const rect = joystick.getBoundingClientRect();
+      origin = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+    
       if (event.touches) {
         touchId = event.changedTouches[0].identifier;
       }
+    
+      moveDrag(event); // Trigger initial movement
     }
-
+    
     function moveDrag(event) {
       if (!joystickActive) return;
-
-      let pointerPosition;
-
+    
+      let pointer;
       if (event.touches) {
-        // Only handle the movement for the original touch to avoid multi-touch issues
         const touch = Array.from(event.touches).find(t => t.identifier === touchId);
         if (!touch) return;
-        pointerPosition = { x: touch.clientX, y: touch.clientY };
+        pointer = { x: touch.clientX, y: touch.clientY };
       } else {
-        pointerPosition = getPointerPosition(event);
+        pointer = getPointerPosition(event);
       }
-
-      const rect = joystick.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      const dx = pointerPosition.x - centerX;
-      const dy = pointerPosition.y - centerY;
-      const radius = rect.width / 2;
-
-      const distance = Math.min(Math.sqrt(dx * dx + dy * dy), radius);
+    
+      const dx = pointer.x - origin.x;
+      const dy = pointer.y - origin.y;
+    
+      const maxRadius = joystick.clientWidth / 2;
+      const distance = Math.min(Math.sqrt(dx * dx + dy * dy), maxRadius);
       const angle = Math.atan2(dy, dx);
-
-      const x = Math.cos(angle) * distance;
-      const y = Math.sin(angle) * distance;
-
-      joystickPad.style.transform = `translate(${x}px, ${y}px)`;
-
-      // Send joystick position
+    
+      const offsetX = Math.cos(angle) * distance;
+      const offsetY = Math.sin(angle) * distance;
+    
+      const normalizedX = offsetX / maxRadius;
+      const normalizedY = offsetY / maxRadius;
+    
+      joystickPad.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+    
       if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ joystick: { x: x / radius, y: y / radius } }));
+        socket.send(JSON.stringify({
+          joystick: {
+            x: normalizedX.toFixed(2),
+            y: normalizedY.toFixed(2)
+          }
+        }));
       }
     }
-
+    
     function endDrag(event) {
-      // For touch, ensure the event corresponds to the original touch
       if (event.touches && !Array.from(event.changedTouches).some(t => t.identifier === touchId)) {
         return;
       }
-
+    
       joystickActive = false;
       touchId = null;
-
-      // Reset joystick position visually
+    
       joystickPad.style.transform = "translate(-50%, -50%)";
-
-      // Reset joystick position signal
+    
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ joystick: { x: 0, y: 0 } }));
       }
     }
-
-    // Event listeners for mouse and touch
-    joystickPad.addEventListener("mousedown", startDrag);
-    joystickPad.addEventListener("touchstart", startDrag);
-
+    
+    // Make entire joystick respond to interaction
+    joystick.addEventListener("mousedown", startDrag);
+    joystick.addEventListener("touchstart", startDrag, { passive: false });
+    
     document.addEventListener("mousemove", moveDrag);
-    document.addEventListener("touchmove", moveDrag);
-
+    document.addEventListener("touchmove", moveDrag, { passive: false });
+    
     document.addEventListener("mouseup", endDrag);
     document.addEventListener("touchend", endDrag);
+
 
     socket.onopen = () => {
       console.log("Connected to server");
