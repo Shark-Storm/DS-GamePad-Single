@@ -6,6 +6,12 @@
   <link rel="manifest" href="manifest.json">
   <title>Gamepad Controller</title>
   <style>
+    * {
+      user-select: none;
+      -webkit-user-select: none; /* For Safari */
+      -ms-user-select: none;     /* For older IE/Edge */
+    }
+    
     html, body {
       margin: 0;
       padding: 0;
@@ -218,7 +224,6 @@
 </head>
 <body>
   <div class="container">
-    <h1>Gamepad Controller</h1>
     <div class="gamepad">
       <!-- D-Pad -->
       <div class="dpad-wrapper">
